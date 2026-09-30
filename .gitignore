@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+
+# Modelet e gjuhes shkarkohen me scripts/download_tessdata.ps1
+tessdata/*.traineddata
+
+# Konfidenciale — asnjehere ne git: dokumente reale te arkivit, output i OCR-it, indeksi i kerkimit
+data/samples/*
+!data/samples/.gitkeep
+data/output/*
+!data/output/.gitkeep
+data/index.db
+
+# Dokumente reale arkivi te vendosura gabimisht jashte data/ — kurre ne git
+DOCS PER TEST AI/
+Thumbs.db

@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "OCR: test_synthetic.png",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.cli",
+            "args": ["ocr", "data/samples/test_synthetic.png"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Search",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.cli",
+            "args": ["search", "kerkimin"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        }
+    ]
+}
