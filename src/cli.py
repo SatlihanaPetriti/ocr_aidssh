@@ -3,6 +3,7 @@
 Usage:
     python -m src.cli ocr <path-to-pdf-or-image> [--lang sqi] [--min-conf 40] [--no-clean]
                                                   [--pages 3,4,10-15] [--psm 6] [--dpi 300]
+                                                  [--upscale 3]
     python -m src.cli search <query>
     python -m src.cli correct <path-to-ocr-txt-file> [--model llama3.2:3b]
 """
@@ -17,13 +18,16 @@ from src.correct.llm_correct import DEFAULT_MODEL, correct_text
 from src.index.search_index import add_page, get_connection, search
 from src.ocr.engine import ocr_image
 from src.ocr.pdf_extract import parse_page_spec, pdf_pages_to_images
-from src.ocr.preprocess import clean_for_ocr
+from src.ocr.preprocess import clean_for_ocr, upscale_for_ocr
 
 DB_PATH = PROJECT_ROOT / "data" / "index.db"
 OUTPUT_DIR = PROJECT_ROOT / "data" / "output"
 
 
-def run_ocr(path: Path, lang: str, min_conf: int, clean: bool, page_spec: str | None, psm: int, dpi: int) -> None:
+def run_ocr(
+    path: Path, lang: str, min_conf: int, clean: bool, page_spec: str | None, psm: int, dpi: int,
+    upscale: int = 1,
+) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     conn = get_connection(DB_PATH)
 
@@ -36,10 +40,17 @@ def run_ocr(path: Path, lang: str, min_conf: int, clean: bool, page_spec: str | 
     # Settings tag in the filename so different --psm/--dpi/--no-clean runs
     # land in separate files instead of overwriting each other — makes it
     # possible to compare configurations side by side.
-    tag = f"psm{psm}_dpi{dpi}{'_raw' if not clean else ''}"
+    # --upscale replaces the cleanup step (see upscale_for_ocr), so "_raw" is
+    # only meaningful without it.
+    if upscale > 1:
+        tag = f"psm{psm}_dpi{dpi}_up{upscale}"
+    else:
+        tag = f"psm{psm}_dpi{dpi}{'_raw' if not clean else ''}"
 
     for page_num, image in pages:
-        if clean:
+        if upscale > 1:
+            image = upscale_for_ocr(image, upscale)
+        elif clean:
             image = clean_for_ocr(image)
         result = ocr_image(image, lang=lang, min_confidence=min_conf, psm=psm)
 
@@ -93,6 +104,10 @@ def main() -> None:
     ocr_parser.add_argument("--pages", default=None, help='Vetem keto faqe nga nje PDF, p.sh. "3,4,10-15"')
     ocr_parser.add_argument("--psm", type=int, default=6, help="Tesseract page segmentation mode (provo 3, 4, 6, 11)")
     ocr_parser.add_argument("--dpi", type=int, default=DEFAULT_DPI, help="DPI per nxjerrjen e faqeve nga PDF")
+    ocr_parser.add_argument(
+        "--upscale", type=int, default=1,
+        help="Zmadho imazhin N here para OCR-it (p.sh. 3) — per imazhe te vogla si screenshot-e; zevendeson pastrimin",
+    )
 
     search_parser = subparsers.add_parser("search", help="Kerko ne tekstin e OCR-uar")
     search_parser.add_argument("query")
@@ -106,7 +121,7 @@ def main() -> None:
     if args.command == "ocr":
         run_ocr(
             args.path, lang=args.lang, min_conf=args.min_conf, clean=not args.no_clean,
-            page_spec=args.pages, psm=args.psm, dpi=args.dpi,
+            page_spec=args.pages, psm=args.psm, dpi=args.dpi, upscale=args.upscale,
         )
     elif args.command == "search":
         run_search(args.query)

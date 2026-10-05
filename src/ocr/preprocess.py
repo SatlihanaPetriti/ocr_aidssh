@@ -35,6 +35,22 @@ def _deskew(gray: np.ndarray) -> np.ndarray:
     )
 
 
+def upscale_for_ocr(image: Image.Image, factor: int) -> Image.Image:
+    """Enlarge a low-resolution image and boost local contrast, without binarizing.
+
+    Meant for small inputs such as screenshots of a page (~600 px wide), where
+    the letters are only a few pixels tall and Tesseract loses most of the
+    text. Used INSTEAD of clean_for_ocr, not before it: on faint carbon copies
+    the adaptive threshold in clean_for_ocr turns the enlarged page into noise,
+    while grayscale + CLAHE keeps the faint strokes readable.
+    """
+    rgb = image.convert("RGB")
+    enlarged = rgb.resize((rgb.width * factor, rgb.height * factor), Image.LANCZOS)
+    gray = np.array(enlarged.convert("L"))
+    contrasted = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
+    return _cv_to_pil(contrasted)
+
+
 def clean_for_ocr(image: Image.Image) -> Image.Image:
     mat = _pil_to_cv(image)
     gray = cv2.cvtColor(mat, cv2.COLOR_BGR2GRAY)
