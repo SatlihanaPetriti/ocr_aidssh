@@ -1,7 +1,7 @@
 """Command-line entry point.
 
 Usage:
-    python -m src.cli ocr <path-to-pdf-or-image> [--lang sqi] [--min-conf 40] [--no-clean]
+    python -m src.cli ocr <path-to-pdf-image-or-folder> [--lang sqi] [--min-conf 40] [--no-clean]
                                                   [--pages 3,4,10-15] [--psm 6] [--dpi 300]
                                                   [--upscale 3]
     python -m src.cli search <query>
@@ -22,6 +22,7 @@ from src.ocr.preprocess import clean_for_ocr, upscale_for_ocr
 
 DB_PATH = PROJECT_ROOT / "data" / "index.db"
 OUTPUT_DIR = PROJECT_ROOT / "data" / "output"
+OCR_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 
 
 def run_ocr(
@@ -119,10 +120,15 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "ocr":
-        run_ocr(
-            args.path, lang=args.lang, min_conf=args.min_conf, clean=not args.no_clean,
-            page_spec=args.pages, psm=args.psm, dpi=args.dpi, upscale=args.upscale,
-        )
+        if args.path.is_dir():
+            targets = sorted(p for p in args.path.iterdir() if p.suffix.lower() in OCR_SUFFIXES)
+        else:
+            targets = [args.path]
+        for target in targets:
+            run_ocr(
+                target, lang=args.lang, min_conf=args.min_conf, clean=not args.no_clean,
+                page_spec=args.pages, psm=args.psm, dpi=args.dpi, upscale=args.upscale,
+            )
     elif args.command == "search":
         run_search(args.query)
     elif args.command == "correct":

@@ -26,6 +26,9 @@ Tesseract OCR eshte instaluar ne `C:\Program Files\Tesseract-OCR\`. Modelet e gj
 # OCR mbi nje imazh te vogel (p.sh. screenshot ~600 px i nje faqeje): zmadhoje 3 here para OCR-it
 .\venv\Scripts\python -m src.cli ocr "data\samples\screenshot.png" --upscale 3
 
+# OCR mbi nje folder te tere (te gjitha PDF/imazhet brenda)
+.\venv\Scripts\python -m src.cli ocr "data\samples\skanime_300dpi"
+
 # Kerkim mbi tekstin e indeksuar
 .\venv\Scripts\python -m src.cli search "fjala e kerkuar"
 ```
