@@ -10,6 +10,8 @@ data/samples/*
 !data/samples/.gitkeep
 data/output/*
 !data/output/.gitkeep
+data/output_vjeter/
+data/ground_truth/
 data/index.db
 
 # Dokumente reale arkivi te vendosura gabimisht jashte data/ — kurre ne git
